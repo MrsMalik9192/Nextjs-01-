@@ -1,36 +1,143 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# @isaacs/cliui
 
-## Getting Started
+Temporary fork of [cliui](http://npm.im/cliui).
 
-First, run the development server:
+![ci](https://github.com/yargs/cliui/workflows/ci/badge.svg)
+[![NPM version](https://img.shields.io/npm/v/cliui.svg)](https://www.npmjs.com/package/cliui)
+[![Conventional Commits](https://img.shields.io/badge/Conventional%20Commits-1.0.0-yellow.svg)](https://conventionalcommits.org)
+![nycrc config on GitHub](https://img.shields.io/nycrc/yargs/cliui)
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+easily create complex multi-column command-line-interfaces.
+
+## Example
+
+```js
+const ui = require('cliui')()
+
+ui.div('Usage: $0 [command] [options]')
+
+ui.div({
+  text: 'Options:',
+  padding: [2, 0, 1, 0]
+})
+
+ui.div(
+  {
+    text: "-f, --file",
+    width: 20,
+    padding: [0, 4, 0, 4]
+  },
+  {
+    text: "the file to load." +
+      chalk.green("(if this description is long it wraps).")
+    ,
+    width: 20
+  },
+  {
+    text: chalk.red("[required]"),
+    align: 'right'
+  }
+)
+
+console.log(ui.toString())
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Deno/ESM Support
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+As of `v7` `cliui` supports [Deno](https://github.com/denoland/deno) and
+[ESM](https://nodejs.org/api/esm.html#esm_ecmascript_modules):
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```typescript
+import cliui from "https://deno.land/x/cliui/deno.ts";
 
-## Learn More
+const ui = cliui({})
 
-To learn more about Next.js, take a look at the following resources:
+ui.div('Usage: $0 [command] [options]')
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+ui.div({
+  text: 'Options:',
+  padding: [2, 0, 1, 0]
+})
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+ui.div({
+  text: "-f, --file",
+  width: 20,
+  padding: [0, 4, 0, 4]
+})
 
-## Deploy on Vercel
+console.log(ui.toString())
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+<img width="500" src="screenshot.png">
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Layout DSL
+
+cliui exposes a simple layout DSL:
+
+If you create a single `ui.div`, passing a string rather than an
+object:
+
+* `\n`: characters will be interpreted as new rows.
+* `\t`: characters will be interpreted as new columns.
+* `\s`: characters will be interpreted as padding.
+
+**as an example...**
+
+```js
+var ui = require('./')({
+  width: 60
+})
+
+ui.div(
+  'Usage: node ./bin/foo.js\n' +
+  '  <regex>\t  provide a regex\n' +
+  '  <glob>\t  provide a glob\t [required]'
+)
+
+console.log(ui.toString())
+```
+
+**will output:**
+
+```shell
+Usage: node ./bin/foo.js
+  <regex>  provide a regex
+  <glob>   provide a glob          [required]
+```
+
+## Methods
+
+```js
+cliui = require('cliui')
+```
+
+### cliui({width: integer})
+
+Specify the maximum width of the UI being generated.
+If no width is provided, cliui will try to get the current window's width and use it, and if that doesn't work, width will be set to `80`.
+
+### cliui({wrap: boolean})
+
+Enable or disable the wrapping of text in a column.
+
+### cliui.div(column, column, column)
+
+Create a row with any number of columns, a column
+can either be a string, or an object with the following
+options:
+
+* **text:** some text to place in the column.
+* **width:** the width of a column.
+* **align:** alignment, `right` or `center`.
+* **padding:** `[top, right, bottom, left]`.
+* **border:** should a border be placed around the div?
+
+### cliui.span(column, column, column)
+
+Similar to `div`, except the next row will be appended without
+a new line being created.
+
+### cliui.resetOutput()
+
+Resets the UI elements of the current cliui instance, maintaining the values
+set for `width` and `wrap`.
